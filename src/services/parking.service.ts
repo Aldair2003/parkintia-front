@@ -96,7 +96,7 @@ export const parkingService = {
 
   async getParkingStatus(cameraId: string, mappingId?: string): Promise<ParkingStatusSummary> {
     // Si tenemos mappingId (cam-08...), pedimos directo a Python
-    if (mappingId && (mappingId.startsWith('cam-') || mappingId === 'default' || mappingId === 'mobile')) {
+    if (mappingId && mappingId.startsWith('cam-')) {
        try {
          const response = await fetch(`http://localhost:5000/api/parking/status?cameraId=${mappingId}`);
          if (response.ok) return response.json();
@@ -108,7 +108,7 @@ export const parkingService = {
     return fetchWithAuth<ParkingStatusSummary>(`/cameras/${cameraId}/parking-status`);
   },
 
-  async getParkingStatusLive(cameraId: string = 'default'): Promise<ParkingStatusSummary> {
+  async getParkingStatusLive(cameraId: string = 'cam-01'): Promise<ParkingStatusSummary> {
     try {
       return await fetchWithAuth<ParkingStatusSummary>(`/cameras/parking-status-live?cameraId=${cameraId}`);
     } catch (e) {
@@ -128,7 +128,7 @@ export const parkingService = {
 
   getStreamUrl(cameraId: string, videoSource: string): string {
     // Si videoSource es una clave conocida (cam-08, cam-01), úsala como ID para el servicio Python
-    const idParam = videoSource && (videoSource.startsWith('cam-') || videoSource === 'default' || videoSource === 'mobile') 
+    const idParam = videoSource && videoSource.startsWith('cam-') 
       ? videoSource 
       : cameraId;
     
@@ -136,11 +136,11 @@ export const parkingService = {
     return `http://localhost:5000/api/video/feed?cameraId=${idParam}`;
   },
 
-  getVideoFeedUrl(cameraId: string = 'default'): string {
+  getVideoFeedUrl(cameraId: string = 'cam-01'): string {
     return `http://localhost:5000/api/video/feed?cameraId=${cameraId}`;
   },
 
-  async controlVideo(action: 'play' | 'pause' | 'restart', cameraId: string = 'default'): Promise<{ success: boolean; message?: string }> {
+  async controlVideo(action: 'play' | 'pause' | 'restart', cameraId: string = 'cam-01'): Promise<{ success: boolean; message?: string }> {
     return fetchWithAuth<{ success: boolean; message?: string }>('/cameras/video-control', {
       method: 'POST',
       body: JSON.stringify({ action, cameraId }),

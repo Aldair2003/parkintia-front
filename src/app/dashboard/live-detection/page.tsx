@@ -4,6 +4,12 @@ import React from 'react';
 import VideoDetectionPlayer from '@/components/dashboard/VideoDetectionPlayer';
 
 export default function LiveDetectionPage() {
+  // Configuración explícita de las cámaras deseadas
+  const activeCameras = [
+    { id: 'cam-01', name: 'Cámara Entrada (01) - IP' },
+    { id: 'cam-08', name: 'Cámara Salida (08) - IP' }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -13,7 +19,7 @@ export default function LiveDetectionPage() {
             🚗 Detección de Parqueo en Vivo
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Monitoreo en tiempo real del parqueadero con detección de vehículos usando YOLO
+            Monitoreo en tiempo real de las cámaras IP 01 y 08 con IA
           </p>
         </div>
 
@@ -31,51 +37,31 @@ export default function LiveDetectionPage() {
               </h3>
               <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
                 <p>
-                  El sistema está procesando el video <strong>parking1.mp4</strong> con detección YOLO.
-                  Las zonas de parqueo están configuradas con coordenadas predefinidas.
+                  Visualizando <strong>Cámara 01</strong> y <strong>Cámara 08</strong>. 
+                  Las zonas configuradas en el panel de control se aplicarán automáticamente.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Video Player Component */}
-        <VideoDetectionPlayer 
-          cameraId="default"
-          showControls={true}
-          className="mb-6"
-        />
+        {/* Multi-Camera Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {activeCameras.map((cam) => (
+                <div key={cam.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+                    <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white border-b pb-2">
+                        📷 {cam.name}
+                    </h2>
+                    <VideoDetectionPlayer 
+                      cameraId={cam.id} // ID explícito (cam-01, cam-08)
+                      showControls={true}
+                    />
+                </div>
+            ))}
+        </div>
 
-        {/* Información técnica */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              📋 Especificaciones Técnicas
-            </h3>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span><strong>Modelo:</strong> YOLOv8s (Small)</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span><strong>Resolución:</strong> 1020x500 pixels</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span><strong>FPS:</strong> ~30 frames por segundo</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span><strong>Zonas:</strong> 12 espacios de parqueo configurados</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span><strong>Detección:</strong> car, truck, bus, motorcycle</span>
-              </li>
-            </ul>
-          </div>
-
+        {/* Información técnica y leyenda */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               🎨 Leyenda de Colores
@@ -93,42 +79,22 @@ export default function LiveDetectionPage() {
                   Espacio Ocupado - Vehículo detectado
                 </span>
               </div>
-              <div className="flex items-center">
-                <div className="w-6 h-6 bg-blue-500 rounded mr-3"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Bounding Box - Vehículo detectado por YOLO
-                </span>
-              </div>
             </div>
+          </div>
+          
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+               Instrucciones
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li>1. Ve a "Configurar Zonas" en el menú lateral.</li>
+                <li>2. Dibuja los espacios para cada cámara.</li>
+                <li>3. Guarda los cambios.</li>
+                <li>4. Vuelve aquí para ver la detección en vivo.</li>
+            </ul>
           </div>
         </div>
 
-        {/* Instrucciones */}
-        <div className="mt-6 bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            💡 Instrucciones de Uso
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Controles de Video:</h4>
-              <ul className="space-y-1">
-                <li>• <strong>Reproducir:</strong> Inicia o reanuda el video</li>
-                <li>• <strong>Pausar:</strong> Detiene temporalmente el video</li>
-                <li>• <strong>Reiniciar:</strong> Vuelve al inicio del video</li>
-                <li>• <strong>Pantalla Completa:</strong> Expande el video</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Monitoreo:</h4>
-              <ul className="space-y-1">
-                <li>• Los datos se actualizan cada 2 segundos</li>
-                <li>• El sistema detecta automáticamente vehículos</li>
-                <li>• Las zonas cambian de color según ocupación</li>
-                <li>• El porcentaje de ocupación se calcula en tiempo real</li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

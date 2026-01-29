@@ -23,7 +23,7 @@ const VideoModal: React.FC<VideoModalProps> = ({
   cameraName, 
   cameraLocation, 
   isOnline,
-  cameraId = 'default',
+  cameraId = 'cam-01',
   videoSource
 }) => {
   const [status, setStatus] = useState<any>(null);

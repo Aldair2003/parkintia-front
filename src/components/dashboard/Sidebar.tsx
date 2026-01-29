@@ -83,7 +83,8 @@ const NavIcons = {
 const navItems = [
   { id: 'overview', label: { es: 'Resumen', en: 'Overview' }, icon: 'overview' },
   { id: 'cameras', label: { es: 'Cámaras', en: 'Cameras' }, icon: 'cameras' },
-  { id: 'reports', label: { es: 'Reportes', en: 'Reports' }, icon: 'reports' }
+  { id: 'reports', label: { es: 'Reportes', en: 'Reports' }, icon: 'reports' },
+  { id: 'config', label: { es: 'Configurar Zonas', en: 'Configure Zones' }, icon: 'collapse' } // Temporary icon reuse
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -122,6 +123,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const handleSelect = (id: string) => {
+    if (id === 'config') {
+        window.open('http://localhost:5000/config', '_blank');
+        return;
+    }
     onModuleSelect(id);
     setMobileOpen(false);
   };

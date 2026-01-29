@@ -69,7 +69,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
       // Mensaje de bienvenida
       const welcomeMessage: ChatMessage = {
         id: generateMessageId(),
-        content: '¡Hola! Soy el asistente virtual de PARKINTIA. ¿En qué puedo ayudarte hoy?\n\nPuedo ayudarte con información sobre espacios de parking, reservas, pagos y más.',
+        content: '¡Hola! Soy el asistente virtual de MedicalPluss. ¿En qué puedo ayudarte hoy?\n\nPuedo ayudarte con información sobre disponibilidad de parqueo y soporte técnico.',
         isUser: false,
         timestamp: new Date(),
         status: 'sent'
@@ -129,52 +129,52 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
         
         // Respuestas específicas por palabras clave
         if (lowerMessage.includes('hola') || lowerMessage.includes('hi') || lowerMessage.includes('buenas')) {
-          return '¡Hola! Bienvenido a PARKINTIA. ¿En qué puedo asistirte? Puedo ayudarte con reservas, información de espacios, precios y más.';
+          return '¡Hola! Bienvenido a MedicalPluss. ¿En qué puedo asistirte? Puedo ayudarte con disponibilidad de parqueo y soporte técnico.';
         }
         
         if (lowerMessage.includes('parking') || lowerMessage.includes('espacio') || lowerMessage.includes('plaza')) {
-          return 'Tenemos espacios de parking disponibles en diferentes zonas. Los precios varían desde $2.50/hora. ¿Te interesa alguna zona específica?';
+          return 'Contamos con monitoreo inteligente de parqueo en tiempo real para MedicalPluss. ¿Deseas consultar la disponibilidad actual?';
         }
         
         if (lowerMessage.includes('reserva') || lowerMessage.includes('reservar')) {
-          return 'Perfecto! Puedes reservar un espacio con hasta 24 horas de anticipación. Solo necesitas seleccionar la zona, fecha y duración. ¿Quieres que te ayude a hacer una reserva?';
+          return 'Por el momento en MedicalPluss el sistema es de libre acceso según disponibilidad detectada por nuestras cámaras. ¿Quieres saber cuántos cupos hay ahora?';
         }
         
         if (lowerMessage.includes('precio') || lowerMessage.includes('costo') || lowerMessage.includes('tarifa')) {
-          return 'Nuestras tarifas son:\n• Zona Centro: $3.00/hora\n• Zona Comercial: $2.50/hora\n• Zona Residencial: $2.00/hora\n\n¿Te interesa alguna zona en particular?';
+          return 'El uso del parqueadero en MedicalPluss es gratuito para pacientes y visitantes autorizados.';
         }
         
         if (lowerMessage.includes('horario') || lowerMessage.includes('hora') || lowerMessage.includes('cuando')) {
-          return 'PARKINTIA está disponible 24/7. Puedes acceder a tu espacio reservado en cualquier momento. ¿Necesitas información sobre algún horario específico?';
+          return 'El sistema de MedicalPluss opera 24/7 sincronizado con los horarios de la clínica.';
         }
         
         if (lowerMessage.includes('pago') || lowerMessage.includes('pagar') || lowerMessage.includes('tarjeta')) {
-          return 'Aceptamos múltiples métodos de pago: tarjetas de crédito/débito, PayPal, y pago móvil. El pago se procesa automáticamente al final de tu estadía.';
+          return 'No se requiere pago para el estacionamiento de MedicalPluss.';
         }
         
         if (lowerMessage.includes('ubicacion') || lowerMessage.includes('donde') || lowerMessage.includes('direccion')) {
-          return 'Tenemos parkings en las principales zonas de la ciudad:\n• Centro Histórico\n• Zona Comercial Norte\n• Distrito Financiero\n• Centros Comerciales\n\n¿Buscas alguna zona específica?';
+          return 'Estamos ubicados en las instalaciones de la clínica MedicalPluss.';
         }
         
         if (lowerMessage.includes('ayuda') || lowerMessage.includes('help') || lowerMessage.includes('soporte')) {
-          return 'Estoy aquí para ayudarte! Puedo asistirte con:\n• Información de espacios disponibles\n• Realizar reservas\n• Consultar precios\n• Ubicaciones de parkings\n• Métodos de pago\n\n¿Qué necesitas?';
+          return 'Estoy aquí para ayudarte! Puedo asistirte con:\n• Información de espacios disponibles\n• Reporte de problemas\n• Consultar horarios de MedicalPluss\n\n¿Qué necesitas?';
         }
         
         if (lowerMessage.includes('disponible') || lowerMessage.includes('libre') || lowerMessage.includes('ocupado')) {
-          return 'Actualmente tenemos 187 espacios ocupados de 250 totales. Hay buena disponibilidad en todas las zonas. ¿Te gustaría ver los espacios disponibles en alguna zona específica?';
+          return 'Puedo darte el reporte en tiempo real si seleccionas la opción de consultar disponibilidad en el menú principal.';
         }
         
         if (lowerMessage.includes('trata') || lowerMessage.includes('que es') || lowerMessage.includes('acerca')) {
-          return 'PARKINTIA es un sistema inteligente de gestión de parking que te permite:\n\n🚗 Encontrar espacios disponibles en tiempo real\n📱 Reservar tu plaza desde la app\n💳 Pagar automáticamente\n📊 Ver estadísticas de uso\n\n¡Todo desde tu dispositivo!';
+          return 'MedicalPluss Smart Parking es un sistema inteligente que utiliza IA para gestionar el estacionamiento de la clínica de forma eficiente.';
         }
         
         // Respuestas generales amigables
         const generalResponses = [
-          '¡Excelente pregunta! Como asistente de PARKINTIA, estoy aquí para ayudarte con todo lo relacionado al parking inteligente.',
-          'Entiendo tu consulta. ¿Te gustaría que te proporcione información específica sobre nuestros servicios de parking?',
-          '¡Perfecto! ¿En qué aspecto de PARKINTIA te puedo ayudar? Tengo información sobre espacios, precios, reservas y más.',
-          'Gran pregunta! PARKINTIA ofrece soluciones completas de parking. ¿Hay algo específico que te interese saber?',
-          'Me da mucho gusto ayudarte. ¿Qué información sobre nuestro sistema de parking necesitas?'
+          '¡Excelente pregunta! Como asistente de MedicalPluss, estoy aquí para ayudarte con la gestión del parking.',
+          'Entiendo tu consulta. ¿Te gustaría saber más sobre el sistema de parqueo de MedicalPluss?',
+          '¡Perfecto! ¿En qué aspecto de MedicalPluss te puedo ayudar?',
+          'Gran pregunta! MedicalPluss ofrece soluciones modernas de parking. ¿Hay algo específico que te interese saber?',
+          'Me da mucho gusto ayudarte. ¿Qué información sobre MedicalPluss necesitas?'
         ];
         
         return generalResponses[Math.floor(Math.random() * generalResponses.length)];
@@ -269,7 +269,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Asistente PARKINTIA</h3>
+            <h3 className="font-semibold text-sm">Asistente MedicalPluss</h3>
             <p className="text-xs opacity-90">
               {state.isConnected ? 'En línea' : 'Conectando...'}
             </p>

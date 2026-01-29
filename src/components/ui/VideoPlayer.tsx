@@ -14,7 +14,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   isOnline, 
   cameraName, 
   className,
-  cameraId = 'default',
+  cameraId = 'cam-01',
   videoSource
 }) => {
   const [streamUrl, setStreamUrl] = useState('');

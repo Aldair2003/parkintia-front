@@ -473,7 +473,7 @@ export const CamerasModule: React.FC = () => {
         cameraName={selectedCamera?.name || ''}
         cameraLocation={selectedCamera?.location || ''}
         isOnline={selectedCamera?.status === 'online'}
-        cameraId={selectedCamera?.id || 'default'}
+        cameraId={selectedCamera?.id || 'cam-01'}
         videoSource={selectedCamera?.stream}
       />
     </div>
