@@ -43,6 +43,14 @@ export const ReportsModule: React.FC = () => {
   const [hourlyData, setHourlyData] = useState<HourlyAverage[]>([]);
   const [periodStats, setPeriodStats] = useState<PeriodStatistics | null>(null);
   const [cameras, setCameras] = useState<Array<{ id: string; name: string }>>([]);
+  
+  // Estado para datos en tiempo real
+  const [liveStats, setLiveStats] = useState<{
+    totalSpaces: number;
+    occupiedSpaces: number;
+    freeSpaces: number;
+    occupancyRate: number;
+  } | null>(null);
 
   // Detectar modo oscuro
   useEffect(() => {
@@ -67,7 +75,29 @@ export const ReportsModule: React.FC = () => {
 
   const colors = isDarkMode ? COLORS.dark : COLORS.light;
 
-  // Cargar datos
+  // Cargar datos en tiempo real del servicio Python
+  const loadLiveStats = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/parking/status?cameraId=default');
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.totalSpaces > 0) {
+          setLiveStats({
+            totalSpaces: data.totalSpaces || 0,
+            occupiedSpaces: data.occupiedSpaces || 0,
+            freeSpaces: data.freeSpaces || (data.totalSpaces - data.occupiedSpaces) || 0,
+            occupancyRate: data.occupancyRate || (data.totalSpaces > 0 
+              ? (data.occupiedSpaces / data.totalSpaces) * 100 
+              : 0),
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('Error loading live stats for reports:', error);
+    }
+  };
+
+  // Cargar datos históricos
   const loadData = async () => {
     setIsLoading(true);
     setError(null);
@@ -82,12 +112,58 @@ export const ReportsModule: React.FC = () => {
 
       // Cargar datos de ocupación por hora
       const days = selectedPeriod === 'month' ? 30 : selectedPeriod === 'week' ? 7 : 1;
-      const hourlyDataResult = await reportsService.getHourlyAverage(selectedCamera, days);
-      setHourlyData(hourlyDataResult);
+      
+      try {
+        const hourlyDataResult = await reportsService.getHourlyAverage(selectedCamera, days);
+        setHourlyData(hourlyDataResult);
+      } catch (hourlyError) {
+        console.warn('No hourly data available:', hourlyError);
+        // Generar datos vacíos para las 24 horas
+        const emptyHourlyData = Array.from({ length: 24 }, (_, hour) => ({
+          hour,
+          avgOccupancy: 0,
+          count: 0,
+        }));
+        setHourlyData(emptyHourlyData);
+      }
 
       // Cargar estadísticas del período
-      const statsResult = await reportsService.getPeriodStatistics(selectedCamera, start, end);
-      setPeriodStats(statsResult);
+      try {
+        const statsResult = await reportsService.getPeriodStatistics(selectedCamera, start, end);
+        setPeriodStats(statsResult);
+      } catch (statsError) {
+        console.warn('No period stats available, trying live data:', statsError);
+        
+        // Fallback: Obtener datos en tiempo real del servicio Python
+        try {
+          const liveResponse = await fetch('http://localhost:5000/api/parking/status?cameraId=default');
+          if (liveResponse.ok) {
+            const liveData = await liveResponse.json();
+            const currentOccupancy = liveData.totalSpaces > 0 
+              ? (liveData.occupiedSpaces / liveData.totalSpaces) * 100 
+              : 0;
+            
+            setPeriodStats({
+              avgOccupancy: currentOccupancy,
+              maxOccupancy: currentOccupancy,
+              minOccupancy: currentOccupancy,
+              peakHour: new Date().getHours(),
+              totalSnapshots: 1,
+            });
+          } else {
+            throw new Error('Live data not available');
+          }
+        } catch (liveError) {
+          // Usar valores por defecto si no hay datos
+          setPeriodStats({
+            avgOccupancy: 0,
+            maxOccupancy: 0,
+            minOccupancy: 0,
+            peakHour: 0,
+            totalSnapshots: 0,
+          });
+        }
+      }
 
     } catch (err: unknown) {
       console.error('Error loading reports data:', err);
@@ -104,8 +180,29 @@ export const ReportsModule: React.FC = () => {
     }
   };
 
+  // Cargar datos iniciales y cuando cambian los filtros
   useEffect(() => {
     loadData();
+    loadLiveStats(); // Cargar datos en tiempo real
+  }, [selectedPeriod, selectedCamera]);
+
+  // Actualización automática cada 3 segundos para datos en tiempo real
+  useEffect(() => {
+    const liveInterval = setInterval(() => {
+      loadLiveStats();
+    }, 3000);
+    
+    return () => clearInterval(liveInterval);
+  }, []);
+
+  // Actualización de datos históricos cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Recargar datos históricos sin mostrar loading
+      loadData();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, [selectedPeriod, selectedCamera]);
 
   const getPeriodLabel = () => {
@@ -266,6 +363,93 @@ export const ReportsModule: React.FC = () => {
           </select>
         </div>
       </div>
+
+      {/* Estadísticas en Tiempo Real */}
+      {liveStats && (
+        <Card className="p-6 border-2" style={{ borderColor: colors.accent }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="relative">
+                <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-500 animate-ping opacity-75" />
+              </div>
+              <h3 className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
+                Estado Actual en Tiempo Real
+              </h3>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium">
+              LIVE
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 rounded-xl" style={{ backgroundColor: `${COLORS.status.error}15` }}>
+              <p className="text-3xl font-bold" style={{ color: COLORS.status.error }}>
+                {liveStats.occupiedSpaces}
+              </p>
+              <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>Espacios Ocupados</p>
+            </div>
+            
+            <div className="text-center p-4 rounded-xl" style={{ backgroundColor: `${COLORS.status.success}15` }}>
+              <p className="text-3xl font-bold" style={{ color: COLORS.status.success }}>
+                {liveStats.freeSpaces}
+              </p>
+              <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>Espacios Libres</p>
+            </div>
+            
+            <div className="text-center p-4 rounded-xl" style={{ backgroundColor: `${colors.accent}15` }}>
+              <p className="text-3xl font-bold" style={{ color: colors.accent }}>
+                {liveStats.totalSpaces}
+              </p>
+              <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>Total Espacios</p>
+            </div>
+            
+            <div className="text-center p-4 rounded-xl" style={{ 
+              backgroundColor: liveStats.occupancyRate > 80 
+                ? `${COLORS.status.error}15` 
+                : liveStats.occupancyRate > 60 
+                  ? `${COLORS.status.warning}15`
+                  : `${COLORS.status.success}15`
+            }}>
+              <p className="text-3xl font-bold" style={{ 
+                color: liveStats.occupancyRate > 80 
+                  ? COLORS.status.error 
+                  : liveStats.occupancyRate > 60 
+                    ? COLORS.status.warning
+                    : COLORS.status.success
+              }}>
+                {liveStats.occupancyRate.toFixed(1)}%
+              </p>
+              <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>Tasa Ocupación</p>
+            </div>
+          </div>
+          
+          {/* Barra de progreso de ocupación */}
+          <div className="mt-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium" style={{ color: colors.textSecondary }}>
+                Nivel de Ocupación Actual
+              </span>
+              <span className="text-sm font-bold" style={{ color: colors.accent }}>
+                {liveStats.occupiedSpaces}/{liveStats.totalSpaces}
+              </span>
+            </div>
+            <div className="w-full h-3 rounded-full" style={{ backgroundColor: colors.border }}>
+              <div 
+                className="h-3 rounded-full transition-all duration-500"
+                style={{ 
+                  width: `${liveStats.occupancyRate}%`,
+                  backgroundColor: liveStats.occupancyRate > 80 
+                    ? COLORS.status.error 
+                    : liveStats.occupancyRate > 60 
+                      ? COLORS.status.warning 
+                      : COLORS.status.success
+                }}
+              />
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Estadísticas del Período */}
       {periodStats && (

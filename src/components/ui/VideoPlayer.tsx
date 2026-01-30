@@ -95,11 +95,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         LIVE
       </div>
 
-      {/* Quality indicator */}
-      <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs backdrop-blur-sm z-10">
-        AI
-      </div>
-
       {/* Camera name overlay */}
       <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs max-w-[calc(100%-1rem)] truncate backdrop-blur-sm z-10">
         {cameraName}

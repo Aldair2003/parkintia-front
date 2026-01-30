@@ -164,5 +164,121 @@ export const parkingService = {
   }> {
     return fetchWithAuth('/cameras/stats/global');
   },
+
+  /**
+   * Obtener estadísticas en tiempo real directamente del servicio Python
+   * Usado para Dashboard y Reportes para mostrar datos actualizados
+   */
+  async getLiveGlobalStats(): Promise<{
+    totalSpaces: number;
+    occupiedSpaces: number;
+    freeSpaces: number;
+    occupancyRate: number;
+  }> {
+    try {
+      // Primero intentamos obtener del servicio Python (datos en tiempo real)
+      const pythonResponse = await fetch('http://localhost:5000/api/parking/status?cameraId=default', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (pythonResponse.ok) {
+        const data = await pythonResponse.json();
+        if (data && data.totalSpaces > 0) {
+          return {
+            totalSpaces: data.totalSpaces || 0,
+            occupiedSpaces: data.occupiedSpaces || 0,
+            freeSpaces: data.freeSpaces || (data.totalSpaces - data.occupiedSpaces) || 0,
+            occupancyRate: data.occupancyRate || (data.totalSpaces > 0 
+              ? (data.occupiedSpaces / data.totalSpaces) * 100 
+              : 0),
+          };
+        }
+      }
+    } catch (error) {
+      console.warn('Python service not available for live stats:', error);
+    }
+
+    // Fallback: obtener del backend NestJS
+    const backendStats = await fetchWithAuth<{
+      totalSpaces: number;
+      occupiedSpaces: number;
+      freeSpaces: number;
+      occupancyRate: number;
+      totalCameras: number;
+      activeCameras: number;
+      camerasWithZones: number;
+    }>('/cameras/stats/global');
+
+    return {
+      totalSpaces: backendStats.totalSpaces,
+      occupiedSpaces: backendStats.occupiedSpaces,
+      freeSpaces: backendStats.freeSpaces,
+      occupancyRate: backendStats.occupancyRate,
+    };
+  },
+
+  /**
+   * Obtener estadísticas combinadas: metadata del backend + datos en tiempo real de Python
+   */
+  async getCombinedStats(): Promise<{
+    totalSpaces: number;
+    occupiedSpaces: number;
+    freeSpaces: number;
+    occupancyRate: number;
+    totalCameras: number;
+    activeCameras: number;
+    camerasWithZones: number;
+  }> {
+    try {
+      // Obtener metadata del backend (cámaras, etc.)
+      const backendStats = await fetchWithAuth<{
+        totalSpaces: number;
+        occupiedSpaces: number;
+        freeSpaces: number;
+        occupancyRate: number;
+        totalCameras: number;
+        activeCameras: number;
+        camerasWithZones: number;
+      }>('/cameras/stats/global');
+
+      // Intentar obtener datos en tiempo real del servicio Python
+      try {
+        const pythonResponse = await fetch('http://localhost:5000/api/parking/status?cameraId=default', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (pythonResponse.ok) {
+          const liveData = await pythonResponse.json();
+          if (liveData && liveData.totalSpaces > 0) {
+            // Combinar: usar datos de ocupación de Python y metadata del backend
+            return {
+              totalSpaces: liveData.totalSpaces || backendStats.totalSpaces,
+              occupiedSpaces: liveData.occupiedSpaces || 0,
+              freeSpaces: liveData.freeSpaces || (liveData.totalSpaces - liveData.occupiedSpaces) || 0,
+              occupancyRate: liveData.occupancyRate || (liveData.totalSpaces > 0 
+                ? (liveData.occupiedSpaces / liveData.totalSpaces) * 100 
+                : 0),
+              totalCameras: backendStats.totalCameras,
+              activeCameras: backendStats.activeCameras,
+              camerasWithZones: backendStats.camerasWithZones,
+            };
+          }
+        }
+      } catch (pythonError) {
+        console.warn('Python service not available, using backend stats only:', pythonError);
+      }
+
+      return backendStats;
+    } catch (error) {
+      console.error('Error getting combined stats:', error);
+      throw error;
+    }
+  },
 };
 

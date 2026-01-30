@@ -130,14 +130,15 @@ export const OverviewModule: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Cargar datos reales
-  const loadData = async () => {
-    setIsLoading(true);
+  // Cargar datos reales con prioridad a datos en tiempo real
+  const loadData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     setError(null);
     
     try {
+      // Usar getCombinedStats que prioriza datos del servicio Python en tiempo real
       const [parkingData, userData] = await Promise.all([
-        parkingService.getGlobalStats(),
+        parkingService.getCombinedStats(),
         userService.getUserStats(),
       ]);
       
@@ -147,12 +148,20 @@ export const OverviewModule: React.FC = () => {
       console.error('Error loading dashboard data:', err);
       setError('Error al cargar los datos del dashboard');
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 
+  // Cargar datos iniciales y configurar actualización automática
   useEffect(() => {
     loadData();
+    
+    // Actualizar cada 3 segundos para tiempo real (igual que CamerasModule)
+    const interval = setInterval(() => {
+      loadData(false); // Sin mostrar loading en actualizaciones automáticas
+    }, 3000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const colors = isDarkMode ? COLORS.dark : COLORS.light;
@@ -231,7 +240,7 @@ export const OverviewModule: React.FC = () => {
               {error}
             </p>
             <button
-              onClick={loadData}
+              onClick={() => loadData()}
               className="flex items-center space-x-2 px-4 py-2 rounded-lg mx-auto"
               style={{ 
                 backgroundColor: colors.accent,
@@ -260,7 +269,7 @@ export const OverviewModule: React.FC = () => {
           </p>
         </div>
         <button
-          onClick={loadData}
+          onClick={() => loadData()}
           disabled={isLoading}
           className="flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors cursor-pointer disabled:opacity-50"
           style={{ 
